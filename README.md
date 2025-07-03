@@ -1,3 +1,5 @@
+This release only contains update like the bill creation and print and item details
+
 # bill_mate
 
 bill_mate is a Flutter application designed for billing management. It provides features such as user login, bill creation, sales tracking, and store management. The app uses modern Flutter development practices including Bloc state management and responsive design.
