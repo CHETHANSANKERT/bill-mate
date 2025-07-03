@@ -1,5 +1,6 @@
 import 'package:bill_mate/screens/bills/all_sales.dart';
 import 'package:bill_mate/screens/bills/prinitable_bill_screen.dart';
+import 'package:bill_mate/screens/create_bill/all_items.dart';
 import 'package:bill_mate/screens/store/all_stores.dart';
 import 'package:bill_mate/screens/bills/billing_home_screen.dart';
 import 'package:bill_mate/screens/create_bill/add_products.dart';
@@ -7,17 +8,12 @@ import 'package:bill_mate/screens/store/create_store.dart';
 import 'package:bill_mate/utils/common_utils.dart';
 import 'package:flutter/material.dart';
 
-
 part 'app_routes.dart';
 
 class AppPages {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     CommonUtility.printMsg('CHANGING ROUTE TO : ${settings.name}');
     switch (settings.name) {
-      // case AppRoutes.login:
-      //   return _createRoute(const LoginScreen());
-      // case AppRoutes.signup:
-      //   return _createRoute(const SignUpScreen());
       case AppRoutes.home:
         return _createRoute(const BillingHomeScreen());
       case AppRoutes.createStore:
@@ -40,6 +36,8 @@ class AppPages {
         return _createRoute(const AllStoresScreen());
       case AppRoutes.printableBill:
         return _createRoute(const PrintableBillScreen());
+      case AppRoutes.allItems:
+        return _createRoute(const AllItemsScreen());
       default:
         return _createRoute(const BillingHomeScreen());
     }
@@ -66,10 +64,10 @@ class AppPages {
   }
 }
 
-navigateOffNamed({
-  required BuildContext context,
-  required String route,
-}) {
+navigateOffNamed(
+  BuildContext context,
+  String route,
+) {
   return Navigator.of(context).pushReplacementNamed(route);
 }
 
@@ -77,9 +75,20 @@ navigateTo(BuildContext context, String route) {
   return Navigator.of(context).pushNamed(route);
 }
 
-navigateOffTo({
-  required BuildContext context,
-  required Widget route,
-}) {
+navigateOffTo(
+  BuildContext context,
+  Widget route,
+) {
   return Navigator.of(context).pushReplacement(AppPages._createRoute(route));
+}
+
+navigateUntil(
+  BuildContext context,
+  String givenRoute,
+) {
+  Navigator.of(context).pushNamedAndRemoveUntil(
+    givenRoute,
+    (route) => false,
+  );
+  // return Navigator.of(context).popUntil(ModalRoute.withName(givenRoute));
 }

@@ -22,3 +22,5 @@ final class ProductDeleted extends CreateBillEvent {
 }
 
 final class ClearProducts extends CreateBillEvent {}
+
+final class LoadAllItems extends CreateBillEvent {}

@@ -16,10 +16,6 @@ Divider commonDivider = const Divider(
   height: 1,
 );
 
-Border outlineBorderAll = Border.all(color: AppColors.kOutline);
+// Border outlineBorderAll = Border.all(color: AppColors.kOutline);
 
 BorderRadius borderRadius16 = BorderRadius.circular(16);
-BorderRadius bottomBorderRadius16 =
-    const BorderRadius.vertical(bottom: Radius.circular(16));
-BorderRadius topBorderRadius16 =
-    const BorderRadius.vertical(top: Radius.circular(16));

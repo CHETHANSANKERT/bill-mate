@@ -11,3 +11,9 @@ final class CreateBillLoaded extends CreateBillState {
 
   CreateBillLoaded({required this.products, required this.total});
 }
+
+final class AllItemsLoaded extends CreateBillState {
+  final List<Map<String, dynamic>> items;
+
+  AllItemsLoaded({required this.items});
+}

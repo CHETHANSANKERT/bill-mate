@@ -1,3 +1,3 @@
-class ApiEndPoints {
-  static const String login = 'login';
-}
+// class ApiEndPoints {
+//   static const String login = 'login';
+// }

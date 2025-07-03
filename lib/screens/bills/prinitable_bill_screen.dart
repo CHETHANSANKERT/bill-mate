@@ -1,19 +1,19 @@
 import 'package:bill_mate/components/ui/app_bar.dart';
+import 'package:bill_mate/utils/app_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:printing/printing.dart';
 
 import '../../bloc/bill/bill_bloc.dart';
 import '../../components/button/primary_button.dart';
+import '../../components/button/text_button.dart';
 import '../../components/ui/app_colors.dart';
 import '../../components/ui/app_loader.dart';
 import '../../components/ui/text_style.dart';
 import '../../constants/asset_constants.dart';
 import '../../services/local/db_service.dart';
 import '../../utils/empty_screen.dart';
-import '../../utils/generate_sales_pdf.dart';
 import '../utility_screens/pdf_view.dart';
 
 class PrintableBillScreen extends StatefulWidget {
@@ -24,7 +24,6 @@ class PrintableBillScreen extends StatefulWidget {
 }
 
 class _PrintableBillScreenState extends State<PrintableBillScreen> {
-
   late List<Map<String, dynamic>> sales;
 
   @override
@@ -36,8 +35,15 @@ class _PrintableBillScreenState extends State<PrintableBillScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: commonAppBar(
-            title: 'Print - Bills', context: context, actionsDefined: []),
+      appBar: commonAppBar(
+        title: 'Print - Bills',
+        context: context,
+        actionsDefined: [],
+        onBackTap: () {
+          Navigator.of(context).pop();
+          context.read<BillBloc>().add(LoadThisMonthGraph());
+        },
+      ),
       body: BlocBuilder<BillBloc, BillState>(
         builder: (context, state) {
           if (state is AllSalesState) {
@@ -58,7 +64,7 @@ class _PrintableBillScreenState extends State<PrintableBillScreen> {
                   ...List.generate(sales.length, (index) {
                     final sale = sales[index];
                     return _buildRow(index, sale, context);
-                  },growable: true),
+                  }, growable: true),
                 ],
               ),
             );
@@ -66,30 +72,72 @@ class _PrintableBillScreenState extends State<PrintableBillScreen> {
           return const Center(child: AppLoader());
         },
       ),
-        floatingActionButton: PrimaryButton(
-          buttonName: 'Print',
-          onClickfunction: () async {
-            // final selectedSales = sales.where((sale) => selectedSaleIds.contains(sale['id'])).toList();
-
-            if (sales.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("No sales to be printed")));
-              return;
-            }
-            // PdfPreview(
-            //   build: (format) => generateSalesPdf(sales),
-            //   useActions: true,
-            //   canChangePageFormat: true,
-            //   canDebug: false,
-            //   pdfFileName: 'sales_invoice.pdf',
-            // );
-
-            Navigator.push(context, MaterialPageRoute(builder: (context) => PdfPreviewScreen(selectedSales: sales,)));
-          },
-          kSize: Size(0.4.sw, 56.h),
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: PrimaryButton(
+        buttonName: 'Print',
+        onClickfunction: () async {
+          if (sales.isEmpty) {
+            appSnackbar(
+                message: 'No sales to be printed',
+                snackbarState: SnackbarState.error);
+            // ScaffoldMessenger.of(context).showSnackBar(
+            //     const SnackBar(content: Text("No sales to be printed")));
+            return;
+          }
+          _onRequestSummarySheet(sales);
+        },
+        kSize: Size(0.4.sw, 56.h),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
+
+  void _onRequestSummarySheet(List<Map<String, dynamic>> selectedSales) async {
+    await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColors.kAppBg,
+        surfaceTintColor: AppColors.kAppBg,
+        title: const Text('Include Summary Sheet?'),
+        content: const Text(
+            'Do you want to include a table sheet at the end showing all stores and their total sales?'),
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TxtBtn(
+                onPress: () {
+                  Navigator.of(context).pop();
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => SalesPdfPreviewPage(
+                                selectedSales: selectedSales,
+                                includeSummarySheet: false,
+                              )));
+                },
+                txt: 'No',
+              ),
+              PrimaryButton(
+                buttonName: 'Yes',
+                kSize: Size(70.h, 30.h),
+                onClickfunction: () {
+                  Navigator.of(context).pop();
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => SalesPdfPreviewPage(
+                                selectedSales: selectedSales,
+                                includeSummarySheet: true,
+                              )));
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildHeader() {
     return Container(
       color: AppColors.kSecondaryDarkBg,
@@ -106,9 +154,9 @@ class _PrintableBillScreenState extends State<PrintableBillScreen> {
   }
 
   expandedText(
-      String txt,
-      int flex,
-      ) {
+    String txt,
+    int flex,
+  ) {
     return Expanded(
       flex: flex,
       child: Text(txt, style: AppTextStyles.kw600Black16),
@@ -124,7 +172,8 @@ class _PrintableBillScreenState extends State<PrintableBillScreen> {
             children: [
               expandedText('${index + 1}', 1),
               expandedText(sale['storeName'] ?? '', 6),
-              expandedText('₹${(sale['saleTotal'] ?? 0).toStringAsFixed(2)}', 4),
+              expandedText(
+                  '₹${(sale['saleTotal'] ?? 0).toStringAsFixed(2)}', 4),
               Expanded(
                 flex: 3,
                 child: InkWell(
@@ -171,7 +220,7 @@ class _PrintableBillScreenState extends State<PrintableBillScreen> {
                   child: SvgPicture.asset(
                     GeneralImageAssets.icDelete,
                     colorFilter:
-                    const ColorFilter.mode(AppColors.kRed, BlendMode.srcIn),
+                        const ColorFilter.mode(AppColors.kRed, BlendMode.srcIn),
                     height: 20.h,
                   ),
                 ),

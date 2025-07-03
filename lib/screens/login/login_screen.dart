@@ -85,9 +85,10 @@ class _LoginScreenState extends State<LoginScreen> {
             // Navigate to BillingHomeScreen on successful login
             Navigator.pushReplacementNamed(context, AppRoutes.home);
           } else if (state is LoginFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Login failed: ${state.error}')),
-            );
+            appSnackbar(message: 'Login failed: ${state.error}',context: context,snackbarState: SnackbarState.error);
+            // ScaffoldMessenger.of(context).showSnackBar(
+            //   SnackBar(content: Text('Login failed: ${state.error}')),
+            // );
           }
         },
         child: SingleChildScrollView(

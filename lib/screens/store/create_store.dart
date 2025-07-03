@@ -42,7 +42,6 @@ class _CreateStoreState extends State<CreateStore> {
   String _location = '';
   String _gstNumber = '';
   String _address = '';
-  String _mobileNum = '';
 
   @override
   void initState() {
@@ -108,9 +107,6 @@ class _CreateStoreState extends State<CreateStore> {
           'createdAt': DateTime.now().cddmmyyyy
         },
       );
-      // appSnackbar(
-      //     message: 'Store created successfully!',
-      //     snackbarState: SnackbarState.success);
     } else {
       appSnackbar(message: 'Please enter all the values');
     }
@@ -161,7 +157,7 @@ class _CreateStoreState extends State<CreateStore> {
                 label: 'Beat Name',
                 hintText: 'Enter the Beat Name',
                 suggestionsCallback: (query) =>
-                    DatabaseHelper().getDistinctFieldValues('beat', query),
+                    DatabaseHelper().getDistinctFieldValuesFromStore('beat', query),
                 onSaved: (value) => _beatName = value ?? '',
                 validator: (value) => _validateNotEmpty(value, 'Beat'),
                 controller: _beatNameController,
@@ -174,7 +170,7 @@ class _CreateStoreState extends State<CreateStore> {
                 onSaved: (value) => _areaName = value ?? '',
                 validator: (value) => _validateNotEmpty(value, 'Area'),
                 suggestionsCallback: (query) {
-                  return DatabaseHelper().getDistinctFieldValues('area', query,
+                  return DatabaseHelper().getDistinctFieldValuesFromStore('area', query,
                       keyValue: [
                         KeyValue(key: 'beat', value: _beatNameController.text)
                       ],);
@@ -192,7 +188,7 @@ class _CreateStoreState extends State<CreateStore> {
                   validator: (value) => _validateNotEmpty(value, 'storeName'),
                   suggestionsCallback: (query) {
                     return DatabaseHelper()
-                        .getDistinctFieldValues('storeName', query, keyValue: [
+                        .getDistinctFieldValuesFromStore('storeName', query, keyValue: [
                       KeyValue(key: 'beat', value: _beatNameController.text),
                       KeyValue(key: 'area', value: _areaNameController.text),
                     ],);
@@ -245,7 +241,7 @@ class _CreateStoreState extends State<CreateStore> {
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
                 ],
-                onSaved: (value) => _mobileNum = value ?? '',
+                // onSaved: (value) => _mobileNum = value ?? '',
                 validator: (value) => _validateNotEmpty(value, 'mobile number'),
               ),
               16.verticalSpace,

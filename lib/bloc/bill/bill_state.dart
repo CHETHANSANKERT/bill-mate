@@ -19,15 +19,3 @@ class AllPrintableSalesState extends BillState {
   final List<Map<String, dynamic>> sales;
   AllPrintableSalesState(this.sales);
 }
-
-class BillingSuccess extends BillState {
-  final dynamic user;
-  final String authToken;
-
-  BillingSuccess({required this.user, required this.authToken});
-}
-
-class BillingFailure extends BillState {
-  final String error;
-  BillingFailure({required this.error});
-}

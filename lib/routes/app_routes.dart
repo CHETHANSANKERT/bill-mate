@@ -18,5 +18,6 @@ abstract class AppRoutes {
   static const String allSales = '/allSales';
   static const String allStores = '/allStores';
   static const String printableBill = '/printableBill';
+  static const String allItems = '/allItems';
 
 }

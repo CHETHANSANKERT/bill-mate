@@ -3,7 +3,6 @@ import 'package:bill_mate/components/button/primary_button.dart';
 import 'package:bill_mate/components/ui/app_card.dart';
 import 'package:bill_mate/components/ui/text_style.dart';
 import 'package:bill_mate/routes/app_pages.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -21,7 +20,7 @@ class BillingHomeScreen extends StatefulWidget {
 class _BillingHomeScreenState extends State<BillingHomeScreen> {
   @override
   void initState() {
-    context.read<BillBloc>().add(LoadDayGraph());
+    context.read<BillBloc>().add(LoadThisMonthGraph());
     super.initState();
   }
 
@@ -30,7 +29,7 @@ class _BillingHomeScreenState extends State<BillingHomeScreen> {
     super.dispose();
   }
 
-  String selectedType = 'Day';
+  String selectedType = 'thisMonth';
 
   @override
   Widget build(BuildContext context) {
@@ -41,149 +40,138 @@ class _BillingHomeScreenState extends State<BillingHomeScreen> {
         context: context,
         isBackReq: false,
       ),
-      body: BlocListener<BillBloc, BillState>(
-        listener: (context, state) async {
-          if (state is BillingSuccess) {
-            // Navigate to BillingHomeScreen on successful login
-            Navigator.pushReplacementNamed(context, AppRoutes.home);
-          } else if (state is BillingFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Login failed: ${state.error}')),
-            );
-          }
-        },
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 16.h, vertical: 24.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              BuildCard(
-                childWidget: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.all(16.h),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildButton("Daily", 'Day'),
-                          _buildButton("Weekly", 'Week'),
-                          _buildButton("Monthly", 'Month'),
-                          const Icon(Icons.bar_chart, color: AppColors.kBlue),
-                        ],
-                      ),
-                    ),
-                    BlocBuilder<BillBloc, BillState>(
-                      builder: (context, state) {
-                        return Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppColors.kAppBg,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              state is GraphState
-                                  ? BillingChart(data: state.data)
-                                  : const SizedBox.shrink(),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                cardColor: AppColors.kCardBg,
-              ),
-              24.verticalSpace,
-              Row(
+      body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: 16.h, vertical: 24.h),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            BuildCard(
+              childWidget: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
-                    flex: 3,
-                    child: BuildCard(
-                      cardColor: AppColors.kPrimaryBg,
-                      childWidget: InkWell(
-                        onTap: () {
-                          Navigator.of(context).pushNamed(AppRoutes.allStores);
-                        },
-                        child: Padding(
-                            padding: EdgeInsets.all(16.h),
-                            child: const Text(
-                              'All-Stores',
-                              style: AppTextStyles.kw600Black18,
-                              textAlign: TextAlign.center,
-                            )),
-                      ),
+                  Padding(
+                    padding: EdgeInsets.all(16.h),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildButton("This Month", 'thisMonth'),
+                        _buildButton("Last Month", 'lastMonth'),
+                        const Icon(Icons.bar_chart, color: AppColors.kBlue),
+                      ],
                     ),
                   ),
-                  8.horizontalSpace,
-                  Expanded(
-                    flex: 4,
-                    child: BuildCard(
-                      cardColor: AppColors.kPrimary,
-                      childWidget: InkWell(
-                        onTap: () {
-                          Navigator.of(context).pushNamed(AppRoutes.allSales);
-                        },
-                        child: Padding(
-                            padding: EdgeInsets.all(16.h),
-                            child: const Text(
-                              'All-Sales',
-                              style: AppTextStyles.kw600White16,
-                              textAlign: TextAlign.center,
-                            )),
-                      ),
-                    ),
+                  BlocBuilder<BillBloc, BillState>(
+                    builder: (context, state) {
+                      return Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.kAppBg,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            state is GraphState
+                                ? BillingChart(data: state.data)
+                                : const SizedBox.shrink(),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
-              16.verticalSpace,
-              Row(
-                children: [
-                  Expanded(
-                    flex: 4,
-                    child: BuildCard(
-                      cardColor: AppColors.kCardBg,
-                      childWidget: InkWell(
-                        onTap: () {
-                          Navigator.of(context).pushNamed(AppRoutes.printableBill);
-                        },
-                        child: Padding(
-                            padding: EdgeInsets.all(16.h),
-                            child: const Text(
-                              'Print-Bills',
-                              style: AppTextStyles.kw600Black18,
-                              textAlign: TextAlign.center,
-                            ),),
-                      ),
-                    ),
-                  ),
-                  8.horizontalSpace,
-                  Expanded(
-                    flex: 3,
-                    child: BuildCard(
-                      cardColor: AppColors.kPrimaryLightBg,
-                      childWidget: InkWell(
-                        onTap: () {
-                          // Navigator.of(context).pushNamed(AppRoutes.allSales);
-                        },
-                        child: Padding(
+              cardColor: AppColors.kCardBg,
+            ),
+            24.verticalSpace,
+            Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: BuildCard(
+                    cardColor: AppColors.kPrimaryBg,
+                    childWidget: InkWell(
+                      onTap: () {
+                        Navigator.of(context).pushNamed(AppRoutes.allStores);
+                      },
+                      child: Padding(
                           padding: EdgeInsets.all(16.h),
                           child: const Text(
-                            'Print-Bills',
+                            'All-Stores',
                             style: AppTextStyles.kw600Black18,
                             textAlign: TextAlign.center,
-                          ),
+                          )),
+                    ),
+                  ),
+                ),
+                8.horizontalSpace,
+                Expanded(
+                  flex: 4,
+                  child: BuildCard(
+                    cardColor: AppColors.kPrimary,
+                    childWidget: InkWell(
+                      onTap: () {
+                        Navigator.of(context).pushNamed(AppRoutes.allSales);
+                      },
+                      child: Padding(
+                          padding: EdgeInsets.all(16.h),
+                          child: const Text(
+                            'All-Sales',
+                            style: AppTextStyles.kw600White16,
+                            textAlign: TextAlign.center,
+                          )),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            16.verticalSpace,
+            Row(
+              children: [
+                Expanded(
+                  flex: 4,
+                  child: BuildCard(
+                    cardColor: AppColors.kCardBg,
+                    childWidget: InkWell(
+                      onTap: () {
+                        Navigator.of(context)
+                            .pushNamed(AppRoutes.printableBill);
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.all(16.h),
+                        child: const Text(
+                          'Print-Bills',
+                          style: AppTextStyles.kw600Black18,
+                          textAlign: TextAlign.center,
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+                8.horizontalSpace,
+                Expanded(
+                  flex: 3,
+                  child: BuildCard(
+                    cardColor: AppColors.kPrimaryLightBg,
+                    childWidget: InkWell(
+                      onTap: () {
+                        Navigator.of(context).pushNamed(AppRoutes.allItems);
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.all(16.h),
+                        child: const Text(
+                          'All-Items',
+                          style: AppTextStyles.kw600Black18,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -197,26 +185,24 @@ class _BillingHomeScreenState extends State<BillingHomeScreen> {
     );
   }
 
-
   _buildButton(
     String label,
     String type,
   ) {
     return BlocBuilder<BillBloc, BillState>(builder: (context, state) {
       bool isSelected = selectedType == type;
-      print('isSelected : $isSelected');
       return GestureDetector(
         onTap: () {
           final bloc = context.read<BillBloc>();
+          setState(() {
+            selectedType = type;
+          });
           switch (type) {
-            case 'Day':
-              bloc.add(LoadDayGraph());
+            case 'thisMonth':
+              bloc.add(LoadThisMonthGraph());
               break;
-            case 'Week':
-              bloc.add(LoadWeekGraph());
-              break;
-            case 'Month':
-              bloc.add(LoadMonthGraph());
+            case 'lastMonth':
+              bloc.add(LoadLastMonthGraph());
               break;
           }
         },

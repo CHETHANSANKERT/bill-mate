@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../ui/text_style.dart';
 
@@ -21,9 +22,15 @@ class TxtBtn extends StatelessWidget {
       alignment: kAlign,
       child: InkWell(
         onTap: onPress,
-        child: Text(
-          txt,
-          style: textStyle,
+        child: Padding(
+          padding: EdgeInsets.all(16.h),
+          child: Text(
+            txt,
+            style: textStyle.copyWith(
+              decoration: TextDecoration.underline,
+              decorationThickness: 2.h
+            ),
+          ),
         ),
       ),
     );

@@ -13,7 +13,7 @@ class DropDownTextField extends StatefulWidget {
   final VoidCallback? onTap;
 
   const DropDownTextField({
-    Key? key,
+    super.key,
     required this.label,
     required this.name,
     required this.hintText,
@@ -22,7 +22,7 @@ class DropDownTextField extends StatefulWidget {
     this.validator,
     this.controller,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   _DropDownTextFieldState createState() => _DropDownTextFieldState();

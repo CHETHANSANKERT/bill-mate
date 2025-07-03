@@ -1,14 +1,17 @@
 import 'package:bill_mate/bloc/create_bill/create_bill_bloc.dart';
+import 'package:bill_mate/components/ui/dropdown_textfield.dart';
 import 'package:bill_mate/model/bill/item.dart';
 import 'package:bill_mate/components/button/primary_button.dart';
-import 'package:bill_mate/components/button/secondary_button.dart';
 import 'package:bill_mate/components/ui/app_colors.dart';
 import 'package:bill_mate/components/ui/text_input_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uuid/uuid.dart';
 
+import '../../components/button/text_button.dart';
 import '../../model/bill/sale.dart';
+import '../../services/local/db_service.dart';
 
 class AddItemDialog extends StatefulWidget {
   final Product? product;
@@ -20,7 +23,7 @@ class AddItemDialog extends StatefulWidget {
 }
 
 class _AddItemDialogState extends State<AddItemDialog> {
-  late TextEditingController _productNameController;
+  late TextEditingController _itemNameController;
   late TextEditingController _rateController;
   late TextEditingController _quantityController;
 
@@ -37,7 +40,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
   @override
   void initState() {
     super.initState();
-    _productNameController =
+    _itemNameController =
         TextEditingController(text: widget.product?.item.productName ?? '');
     _rateController =
         TextEditingController(text: widget.product?.rate.toString() ?? '');
@@ -45,21 +48,28 @@ class _AddItemDialogState extends State<AddItemDialog> {
         TextEditingController(text: widget.product?.quantity.toString() ?? '');
     _rateController.addListener(_calculateTotal);
     _quantityController.addListener(_calculateTotal);
-    _calculateTotal();
   }
 
   @override
   void dispose() {
-    _productNameController.dispose();
+    _itemNameController.dispose();
     _rateController.dispose();
     _quantityController.dispose();
     super.dispose();
   }
 
+  String? _validateNotEmpty(String? value, String fieldName) {
+    if (value == null || value.trim().isEmpty) {
+      return '$fieldName cannot be empty';
+    }
+    return null;
+  }
+
+  List<Map<String, dynamic>> itemsList = [];
+
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.product != null;
-
     return Dialog(
       surfaceTintColor: AppColors.kWhite,
       insetPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
@@ -74,7 +84,26 @@ class _AddItemDialogState extends State<AddItemDialog> {
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
             16.verticalSpace,
-            _buildInput('Name', _productNameController),
+            DropDownTextField(
+              controller: _itemNameController,
+              name: 'itemName',
+              label: 'item name',
+              hintText: 'Enter Item name : ',
+              suggestionsCallback: (String query) async {
+                itemsList = await DatabaseHelper().getDistinctFieldValuesInItem(query);
+                return itemsList
+                    .map((row) => row['itemName']?.toString() ?? '')
+                    .where((v) => v.isNotEmpty)
+                    .toSet()
+                    .toList();
+              },
+              validator: (value) => _validateNotEmpty(value, 'itemName'),
+              onTap: (){
+                _rateController.text = itemsList.where((item) {
+                  return item['itemName'] == _itemNameController.text;
+                }).first['rate'].toString();
+              },
+            ),
             16.verticalSpace,
             _buildInput('Rate', _rateController,
                 keyboardType: TextInputType.number),
@@ -93,21 +122,22 @@ class _AddItemDialogState extends State<AddItemDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                SecondaryButton(
-                    buttonName: 'Cancel',
-                    onClickfunction: () {
-                      Navigator.pop(context);
-                    }),
+                TxtBtn(
+                  txt: 'Cancel',
+                  onPress: (){
+                    Navigator.pop(context);
+                  },
+                ),
                 PrimaryButton(
                   buttonName: isEditing ? 'Update' : 'Save',
                   kSize: Size(0.25.sw, 56.h),
-                  onClickfunction: () {
-                    final productName = _productNameController.text.trim();
+                  onClickfunction: () async {
+                    Navigator.pop(context);
+                    final productName = _itemNameController.text.trim();
                     final rate = double.tryParse(_rateController.text) ?? 0;
                     final quantity =
                         double.tryParse(_quantityController.text) ?? 0;
                     final total = rate * quantity;
-
                     if (productName.isEmpty || rate <= 0 || quantity <= 0) {
                       return;
                     }
@@ -121,17 +151,27 @@ class _AddItemDialogState extends State<AddItemDialog> {
                       total: total,
                       rate: rate,
                     );
+                    if (await DatabaseHelper()
+                        .findItemIsPresent(_itemNameController.text)) {
+                      Map<String, dynamic> item = {
+                        'id': const Uuid().v4(),
+                        'itemName': productName,
+                        'rate': rate,
+                      };
+                      DatabaseHelper().insertItem(item);
+                    }
 
                     if (isEditing) {
                       context
                           .read<CreateBillBloc>()
                           .add(ProductUpdated(product));
-                    } else {
+                    }
+                    else {
                       context.read<CreateBillBloc>().add(ProductAdded(product));
                     }
 
-                    Navigator.pop(context);
-                  },
+                    // Navigator.pop(context);
+                    },
                 ),
               ],
             )

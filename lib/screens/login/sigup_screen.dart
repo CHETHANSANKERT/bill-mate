@@ -39,9 +39,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final confirmPassword = _confirmPasswordController.text.trim();
 
     if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields')),
-      );
+      appSnackbar(message: 'Please fill all fields',context: context,snackbarState: SnackbarState.warning);
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(content: Text('Please fill all fields')),
+      // );
       return;
     }
 
@@ -55,9 +56,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
     appSnackbar(
         message: 'Sign Up successful (mock)',
         snackbarState: SnackbarState.success);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Sign Up successful (mock)')),
-    );
+    // ScaffoldMessenger.of(context).showSnackBar(
+    //   const SnackBar(content: Text('Sign Up successful (mock)')),
+    // );
   }
 
   @override

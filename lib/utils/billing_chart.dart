@@ -1,6 +1,7 @@
 import 'package:bill_mate/components/ui/app_colors.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../constants/asset_constants.dart';
@@ -30,7 +31,8 @@ class BillingChart extends StatelessWidget {
     final minY = yValues.reduce((a, b) => a < b ? a : b);
     final maxY = yValues.reduce((a, b) => a > b ? a : b);
 
-    final yInterval = ((maxY - minY) / 5).ceilToDouble();
+    final intervalY = ((maxY - minY) / 5).ceilToDouble();
+    final double yInterval = intervalY <= 0 ? 1.0 : intervalY;
 
     final xIndexesToShow = _getXLabelIndexes(data.length);
 
@@ -46,9 +48,9 @@ class BillingChart extends StatelessWidget {
                 showTitles: true,
                 interval: yInterval,
                 getTitlesWidget: (value, meta) => Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
+                  padding: EdgeInsets.only(right: 2.h),
                   child: Text(
-                    '\$${value.toInt()}',
+                    '${value.toInt()}',
                     style: const TextStyle(fontSize: 10, color: Colors.grey),
                   ),
                 ),
@@ -61,14 +63,16 @@ class BillingChart extends StatelessWidget {
                 interval: 1,
                 getTitlesWidget: (value, meta) {
                   final index = value.toInt();
-                  if (!xIndexesToShow.contains(index))
+                  if (!xIndexesToShow.contains(index)) {
                     return const SizedBox.shrink();
-                  if (index < 0 || index >= xLabels.length)
+                  }
+                  if (index < 0 || index >= xLabels.length) {
                     return const SizedBox.shrink();
+                  }
                   return Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
+                    padding: EdgeInsets.only(top: 4.h),
                     child: Text(
-                      xLabels[index],
+                      DateTime.parse(xLabels[index]).day.toString(),
                       style: const TextStyle(fontSize: 10, color: Colors.grey),
                       textAlign: TextAlign.center,
                     ),

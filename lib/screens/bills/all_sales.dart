@@ -3,18 +3,19 @@ import 'package:bill_mate/components/ui/app_colors.dart';
 import 'package:bill_mate/components/ui/app_loader.dart';
 import 'package:bill_mate/components/ui/text_style.dart';
 import 'package:bill_mate/constants/asset_constants.dart';
+import 'package:bill_mate/utils/app_snackbar.dart';
 import 'package:bill_mate/utils/empty_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:printing/printing.dart';
 
 import '../../bloc/bill/bill_bloc.dart';
 import '../../components/button/cross_button.dart';
 import '../../components/button/primary_button.dart';
+import '../../components/button/text_button.dart';
+import '../../routes/app_pages.dart';
 import '../../services/local/db_service.dart';
-import '../../utils/generate_sales_pdf.dart';
 import '../utility_screens/pdf_view.dart';
 
 class AllSalesScreen extends StatefulWidget {
@@ -39,40 +40,56 @@ class _AllSalesScreenState extends State<AllSalesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: commonAppBar(
-        title: 'All Sales',
-        context: context,
-        actionsDefined: [
-          _isPrint
-              ? crossButton(context, onTap: () {
-                  setState(() {
-                    _isPrint = false;
-                  });
-                })
-              : InkWell(
-                  onTap: () {
+          title: 'All Sales',
+          context: context,
+          actionsDefined: [
+            _isPrint
+                ? crossButton(context, onTap: () {
                     setState(() {
-                      _isPrint = true;
+                      _isPrint = false;
                     });
-                  },
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.h),
-                    child: SvgPicture.asset(
-                      GeneralImageAssets.icPrint,
-                      height: 28.h,
+                  })
+                : InkWell(
+                    onTap: () {
+                      setState(() {
+                        _isPrint = true;
+                      });
+                    },
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.h),
+                      child: SvgPicture.asset(
+                        GeneralImageAssets.icPrint,
+                        height: 28.h,
+                      ),
                     ),
                   ),
-                ),
-        ],
-      ),
+          ],
+          onBackTap: () {
+            Navigator.of(context).pop();
+            context.read<BillBloc>().add(LoadThisMonthGraph());
+          }),
       body: BlocBuilder<BillBloc, BillState>(
         builder: (context, state) {
           if (state is AllSalesState) {
             sales = state.sales;
             if (sales.isEmpty) {
-              return const Center(
-                child: EmptyScreen(
-                  titleText: 'No sales found.',
-                  subTitleText: 'Start the Sales',
+              return Padding(
+                padding: EdgeInsets.all(16.h),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const SizedBox.shrink(),
+                    const EmptyScreen(
+                      titleText: 'No sales found.',
+                      subTitleText: 'Start the Sales',
+                    ),
+                    PrimaryButton(
+                      buttonName: 'Create-Bill',
+                      onClickfunction: () {
+                        navigateOffNamed(context, AppRoutes.createStore);
+                      },
+                    ),
+                  ],
                 ),
               );
             }
@@ -84,7 +101,7 @@ class _AllSalesScreenState extends State<AllSalesScreen> {
                   ...List.generate(sales.length, (index) {
                     final sale = sales[index];
                     return _buildRow(index, sale, context);
-                  },growable: true),
+                  }, growable: true),
                 ],
               ),
             );
@@ -97,17 +114,68 @@ class _AllSalesScreenState extends State<AllSalesScreen> {
           ? PrimaryButton(
               buttonName: 'Print',
               onClickfunction: () async {
-                final selectedSales = sales.where((sale) => selectedSaleIds.contains(sale['id'])).toList();
+                final selectedSales = sales
+                    .where((sale) => selectedSaleIds.contains(sale['id']))
+                    .toList();
 
                 if (selectedSales.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("No sales selected")));
+                  appSnackbar(message: 'No sales selected',context: context,snackbarState: SnackbarState.warning);
+                  // ScaffoldMessenger.of(context).showSnackBar(
+                  //     const SnackBar(content: Text("No sales selected")));
                   return;
                 }
-                Navigator.push(context, MaterialPageRoute(builder: (context) => PdfPreviewScreen(selectedSales: selectedSales,)));
+                _onRequestSummarySheet(selectedSales);
               },
               kSize: Size(0.4.sw, 56.h),
             )
           : const SizedBox.shrink(),
+    );
+  }
+
+  void _onRequestSummarySheet(List<Map<String, dynamic>> selectedSales) async {
+    await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColors.kAppBg,
+        surfaceTintColor: AppColors.kAppBg,
+        title: const Text('Include Summary Sheet?'),
+        content: const Text(
+            'Do you want to include a table sheet at the end showing all stores and item bill list ?'),
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TxtBtn(
+                onPress: () {
+                  Navigator.of(context).pop();
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => SalesPdfPreviewPage(
+                                selectedSales: selectedSales,
+                                includeSummarySheet: false,
+                              )));
+                },
+                txt: 'No',
+              ),
+              PrimaryButton(
+                buttonName: 'Yes',
+                kSize: Size(70.h, 30.h),
+                onClickfunction: () {
+                  Navigator.of(context).pop();
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => SalesPdfPreviewPage(
+                                selectedSales: selectedSales,
+                                includeSummarySheet: true,
+                              )));
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -158,7 +226,8 @@ class _AllSalesScreenState extends State<AllSalesScreen> {
                     )
                   : expandedText('${index + 1}', 1),
               expandedText(sale['storeName'] ?? '', 6),
-              expandedText('₹${(sale['saleTotal'] ?? 0).toStringAsFixed(2)}', 4),
+              expandedText(
+                  '₹${(sale['saleTotal'] ?? 0).toStringAsFixed(2)}', 4),
               Expanded(
                 flex: 3,
                 child: InkWell(
@@ -223,4 +292,3 @@ class _AllSalesScreenState extends State<AllSalesScreen> {
     );
   }
 }
-

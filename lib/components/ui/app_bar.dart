@@ -16,11 +16,11 @@ class StringMap {
 
 AppBar commonAppBar({
   required String title,
-  VoidCallback? onTap,
+  VoidCallback? onBackTap,
   required BuildContext context,
   bool isBackReq = true,
   List<Widget>? actionsDefined,
-  List<String> sm = const [StringMap.profile],
+  List<String> sm = const [],
 }) {
   final Map<String, Widget Function(BuildContext)> actionMap = {
     StringMap.notification: (context) => Padding(
@@ -66,7 +66,13 @@ AppBar commonAppBar({
     title: appBarTxtBlk(title),
     centerTitle: true,
     leading: isBackReq
-        ? AppBackButton(context, onPress: onTap)
+        ? appBackButton(context, onPress: () {
+            if (onBackTap != null) {
+              onBackTap();
+            } else {
+              Navigator.of(context).pop();
+            }
+          })
         : const SizedBox.shrink(),
     actions: actionsDefined ?? actions,
     backgroundColor: AppColors.kAppBarBg,

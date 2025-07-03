@@ -6,7 +6,6 @@ import 'package:bill_mate/components/ui/text_style.dart';
 import 'package:bill_mate/constants/asset_constants.dart';
 import 'package:bill_mate/routes/app_pages.dart';
 import 'package:bill_mate/screens/create_bill/add_item_dialog.dart';
-import 'package:bill_mate/utils/app_snackbar.dart';
 import 'package:bill_mate/utils/custon_date_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -55,6 +54,10 @@ class _AddProductsState extends State<AddProducts> {
       appBar: commonAppBar(
         title: 'Add Products',
         context: context,
+        onBackTap: () {
+          context.read<CreateBillBloc>().add(ClearProducts());
+          Navigator.of(context).pop();
+        },
         actionsDefined: [
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.h),
@@ -109,20 +112,6 @@ class _AddProductsState extends State<AddProducts> {
                       label2: 'Area Name : ',
                       value2: widget.area,
                     ),
-                    // 8.verticalSpace,
-                    // widget.location != ''
-                    //     ? _rowLabel(
-                    //         label1: 'location : ',
-                    //         value1: widget.location,
-                    //         label2: 'GST Number : ',
-                    //         value2: widget.gstNumber,
-                    //       )
-                    //     : widget.gstNumber != ''
-                    //         ? _labelValueText(
-                    //             label: 'GST Number : ',
-                    //             value: widget.gstNumber,
-                    //           )
-                    //         : const SizedBox.shrink(),
                   ],
                 ),
               ),
@@ -320,7 +309,7 @@ class _AddProductsState extends State<AddProducts> {
               'storeName': widget.storeName,
               'saleTotal': sale.total,
               'createdAt': sale.createdAt,
-              'storeId' : widget.storeId,
+              'storeId': widget.storeId,
             };
             await DatabaseHelper().insertSale(saleMap);
 
@@ -336,15 +325,12 @@ class _AddProductsState extends State<AddProducts> {
               };
               await DatabaseHelper().insertProduct(productMap);
             }
-            // appSnackbar(
-            //     message: 'Products saved successfully!',
-            //     snackbarState: SnackbarState.success,
-            // context: context);
             context.read<CreateBillBloc>().add(ClearProducts());
-            Navigator.of(context).pushNamedAndRemoveUntil(
-              AppRoutes.home,
-              (route) => false,
-            );
+            // Navigator.of(context).pushNamedAndRemoveUntil(
+            //   AppRoutes.home,
+            //   (route) => false,
+            // );
+            navigateUntil(context, AppRoutes.home);
           }
         },
         kSize: Size(0.4.sw, 56.h),

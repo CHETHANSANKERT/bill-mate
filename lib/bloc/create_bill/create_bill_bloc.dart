@@ -2,6 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 
 import '../../model/bill/sale.dart';
+import '../../services/local/db_service.dart';
 
 part 'create_bill_event.dart';
 part 'create_bill_state.dart';
@@ -50,6 +51,11 @@ class CreateBillBloc extends Bloc<CreateBillEvent, CreateBillState> {
 
     on<ClearProducts>((event, emit) {
       emit(CreateBillLoaded(products: const [], total: 0));
+    });
+
+    on<LoadAllItems>((event,emit) async {
+      final allItems =  await DatabaseHelper().getAllItems();
+      emit(AllItemsLoaded(items: allItems));
     });
   }
 }
