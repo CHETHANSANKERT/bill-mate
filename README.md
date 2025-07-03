@@ -1,4 +1,4 @@
-This release only contains update like the bill creation and print and item details
+This release only contains update like the bill creation and print and item details and details regarding the chart analysis.
 
 # bill_mate
 
