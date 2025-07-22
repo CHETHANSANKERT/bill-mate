@@ -2,12 +2,15 @@ import 'package:bill_mate/bloc/bill/bill_bloc.dart';
 import 'package:bill_mate/components/button/primary_button.dart';
 import 'package:bill_mate/components/ui/app_card.dart';
 import 'package:bill_mate/components/ui/text_style.dart';
+import 'package:bill_mate/constants/asset_constants.dart';
 import 'package:bill_mate/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../components/ui/app_bar.dart';
 import '../../components/ui/app_colors.dart';
+import '../../services/google/upload_user_db_to_drive.dart';
 import '../../utils/billing_chart.dart';
 
 class BillingHomeScreen extends StatefulWidget {
@@ -35,11 +38,21 @@ class _BillingHomeScreenState extends State<BillingHomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.kAppBg,
-      appBar: commonAppBar(
-        title: 'Billing-Sheet',
-        context: context,
-        isBackReq: false,
-      ),
+      appBar: commonAppBar(title: 'Billing-Sheet', context: context, isBackReq: false, actionsDefined: [
+        InkWell(
+          onTap: () async {
+            try {
+              await uploadUserDbToDrive();
+            } catch (e) {
+              debugPrint("Upload failed: $e");
+            }
+          },
+          child: Padding(
+            padding: EdgeInsets.only(right: 8.h),
+            child: SvgPicture.asset(GeneralImageAssets.icAddToDrive),
+          ),
+        ),
+      ]),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 16.h, vertical: 24.h),
         child: Column(
@@ -57,7 +70,12 @@ class _BillingHomeScreenState extends State<BillingHomeScreen> {
                       children: [
                         _buildButton("This Month", 'thisMonth'),
                         _buildButton("Last Month", 'lastMonth'),
-                        const Icon(Icons.bar_chart, color: AppColors.kBlue),
+                        IconButton(
+                          onPressed: () {
+                            navigateTo(context, AppRoutes.allGraph);
+                          },
+                          icon: const Icon(Icons.bar_chart, color: AppColors.kBlue),
+                        ),
                       ],
                     ),
                   ),
@@ -72,9 +90,7 @@ class _BillingHomeScreenState extends State<BillingHomeScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            state is GraphState
-                                ? BillingChart(data: state.data)
-                                : const SizedBox.shrink(),
+                            state is GraphState ? BillingChart(data: state.data) : const SizedBox.shrink(),
                           ],
                         ),
                       );
@@ -135,8 +151,7 @@ class _BillingHomeScreenState extends State<BillingHomeScreen> {
                     cardColor: AppColors.kCardBg,
                     childWidget: InkWell(
                       onTap: () {
-                        Navigator.of(context)
-                            .pushNamed(AppRoutes.printableBill);
+                        Navigator.of(context).pushNamed(AppRoutes.printableBill);
                       },
                       child: Padding(
                         padding: EdgeInsets.all(16.h),
@@ -207,22 +222,15 @@ class _BillingHomeScreenState extends State<BillingHomeScreen> {
           }
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: isSelected
-                ? AppColors.kBlue.withOpacity(0.4)
-                : AppColors.kOutline.withOpacity(0.2),
+            color: isSelected ? AppColors.kBlue.withOpacity(0.4) : AppColors.kOutline.withOpacity(0.2),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-                color: isSelected ? AppColors.kBlue : AppColors.kOutline),
+            border: Border.all(color: isSelected ? AppColors.kBlue : AppColors.kOutline),
           ),
           child: Text(
-            isSelected
-                ? '$label - ₹ ${state is GraphState ? state.total.toStringAsFixed(0) : ''}'
-                : label,
-            style: isSelected
-                ? AppTextStyles.kw600White14
-                : AppTextStyles.kw400Black14,
+            isSelected ? '$label - ₹ ${state is GraphState ? state.total.toStringAsFixed(0) : ''}' : label,
+            style: isSelected ? AppTextStyles.kw600White14 : AppTextStyles.kw400Black14,
           ),
         ),
       );

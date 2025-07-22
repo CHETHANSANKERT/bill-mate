@@ -1,5 +1,6 @@
 import 'package:bill_mate/components/ui/text_input_field.dart';
 import 'package:bill_mate/components/ui/text_style.dart';
+import 'package:bill_mate/model/store/store.dart';
 import 'package:bill_mate/utils/app_snackbar.dart';
 import 'package:bill_mate/utils/custon_date_extension.dart';
 import 'package:flutter/material.dart';
@@ -49,7 +50,7 @@ class _CreateStoreState extends State<CreateStore> {
     super.initState();
   }
 
-  initailizeEditor(){
+  initailizeEditor() {
     _beatNameController = TextEditingController();
     _areaNameController = TextEditingController();
     _storeNameController = TextEditingController();
@@ -79,17 +80,18 @@ class _CreateStoreState extends State<CreateStore> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       final String storeId = const Uuid().v4();
-      final storeData = {
-        'storeId': storeId,
-        'storeName': _storeName,
-        'ownerName': _ownerName,
-        'location': _location,
-        'gstNumber': _gstNumber,
-        'area': _areaName,
-        'beat': _beatName,
-        'address': _address,
-        'mobileNum': _mobileNumberController.text,
-      };
+      final StoreModel storeData = StoreModel(
+        storeId: storeId,
+        storeName: _storeName,
+        ownerName: _ownerName,
+        location: _location,
+        gstNumber: _gstNumber,
+        area: _areaName,
+        beat: _beatName,
+        address: _address,
+        mobileNum: _mobileNumberController.text,
+      );
+
       /// for adding the store if it is not present in into the database
       await DatabaseHelper().insertStore(storeData);
       Navigator.pushNamed(
@@ -120,8 +122,6 @@ class _CreateStoreState extends State<CreateStore> {
     }
     return null;
   }
-
-  bool _isStorePresent = false;
 
   @override
   Widget build(BuildContext context) {
@@ -156,8 +156,8 @@ class _CreateStoreState extends State<CreateStore> {
                 name: 'beat',
                 label: 'Beat Name',
                 hintText: 'Enter the Beat Name',
-                suggestionsCallback: (query) =>
-                    DatabaseHelper().getDistinctFieldValuesFromStore('beat', query),
+                suggestionsCallback: (query) => DatabaseHelper()
+                    .getDistinctFieldValuesFromStore('beat', query),
                 onSaved: (value) => _beatName = value ?? '',
                 validator: (value) => _validateNotEmpty(value, 'Beat'),
                 controller: _beatNameController,
@@ -170,10 +170,13 @@ class _CreateStoreState extends State<CreateStore> {
                 onSaved: (value) => _areaName = value ?? '',
                 validator: (value) => _validateNotEmpty(value, 'Area'),
                 suggestionsCallback: (query) {
-                  return DatabaseHelper().getDistinctFieldValuesFromStore('area', query,
-                      keyValue: [
-                        KeyValue(key: 'beat', value: _beatNameController.text)
-                      ],);
+                  return DatabaseHelper().getDistinctFieldValuesFromStore(
+                    'area',
+                    query,
+                    keyValue: [
+                      KeyValue(key: 'beat', value: _beatNameController.text)
+                    ],
+                  );
                 },
                 controller: _areaNameController,
               ),
@@ -187,28 +190,27 @@ class _CreateStoreState extends State<CreateStore> {
                   onSaved: (value) => _storeName = value ?? '',
                   validator: (value) => _validateNotEmpty(value, 'storeName'),
                   suggestionsCallback: (query) {
-                    return DatabaseHelper()
-                        .getDistinctFieldValuesFromStore('storeName', query, keyValue: [
-                      KeyValue(key: 'beat', value: _beatNameController.text),
-                      KeyValue(key: 'area', value: _areaNameController.text),
-                    ],);
+                    return DatabaseHelper().getDistinctFieldValuesFromStore(
+                      'storeName',
+                      query,
+                      keyValue: [
+                        KeyValue(key: 'beat', value: _beatNameController.text),
+                        KeyValue(key: 'area', value: _areaNameController.text),
+                      ],
+                    );
                   },
                   onTap: () async {
-                    final store = await DatabaseHelper().findStore(_storeNameController.text,_areaNameController.text,_beatNameController.text);
+                    final store = await DatabaseHelper().findStore(
+                        _storeNameController.text,
+                        _areaNameController.text,
+                        _beatNameController.text);
                     _ownerNameController.text = store['ownerName'].toString();
-                        _addressController.text = store['address'].toString();
-                        _gstNumberController.text = store['gstNumber'].toString();
-                        _locationController.text = store['location'].toString();
-                        storeId =  store['storeId'].toString();
-                    _mobileNumberController.text =  store['mobileNum'].toString();
-                    if(store.isNotEmpty){
-                      setState(() {
-                        _isStorePresent = true;
-                      });
-                    }
-                    setState(() {
-                      _isStorePresent = true;
-                    });
+                    _addressController.text = store['address'].toString();
+                    _gstNumberController.text = store['gstNumber'].toString();
+                    _locationController.text = store['location'].toString();
+                    storeId = store['storeId'].toString();
+                    _mobileNumberController.text =
+                        store['mobileNum'].toString();
                   },
                 );
               }),
@@ -263,23 +265,23 @@ class _CreateStoreState extends State<CreateStore> {
               24.verticalSpace,
               Center(
                 child: PrimaryButton(
-                  buttonName: _isStorePresent ? 'Add-Sale' : 'Create Store',
+                  buttonName: 'Add-Sale',
                   onClickfunction: () {
-                    _isStorePresent ? Navigator.pushNamed(
-                      context,
-                      AppRoutes.addProducts,
-                      arguments: {
-                        'storeId': storeId,
-                        'storeName': _storeNameController.text,
-                        'ownerName': _ownerNameController.text,
-                        'location': _locationController.text,
-                        'area': _areaNameController.text,
-                        'beat': _beatNameController.text,
-                        'address': _addressController.text,
-                        'gstNumber': _gstNumberController.text,
-                        'createdAt': DateTime.now().cddmmyyyy
-                      },
-                    ) :
+                    // _isStorePresent ? Navigator.pushNamed(
+                    //   context,
+                    //   AppRoutes.addProducts,
+                    //   arguments: {
+                    //     'storeId': storeId,
+                    //     'storeName': _storeNameController.text,
+                    //     'ownerName': _ownerNameController.text,
+                    //     'location': _locationController.text,
+                    //     'area': _areaNameController.text,
+                    //     'beat': _beatNameController.text,
+                    //     'address': _addressController.text,
+                    //     'gstNumber': _gstNumberController.text,
+                    //     'createdAt': DateTime.now().cddmmyyyy
+                    //   },
+                    // ) :
                     _submitForm();
                   },
                   kSize: Size(0.4.sw, 60.h),

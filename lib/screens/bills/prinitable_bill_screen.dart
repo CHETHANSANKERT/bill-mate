@@ -76,9 +76,7 @@ class _PrintableBillScreenState extends State<PrintableBillScreen> {
         buttonName: 'Print',
         onClickfunction: () async {
           if (sales.isEmpty) {
-            appSnackbar(
-                message: 'No sales to be printed',
-                snackbarState: SnackbarState.error);
+            appSnackbar(message: 'No sales to be printed', snackbarState: SnackbarState.error);
             // ScaffoldMessenger.of(context).showSnackBar(
             //     const SnackBar(content: Text("No sales to be printed")));
             return;
@@ -98,8 +96,7 @@ class _PrintableBillScreenState extends State<PrintableBillScreen> {
         backgroundColor: AppColors.kAppBg,
         surfaceTintColor: AppColors.kAppBg,
         title: const Text('Include Summary Sheet?'),
-        content: const Text(
-            'Do you want to include a table sheet at the end showing all stores and their total sales?'),
+        content: const Text('Do you want to include a table sheet at the end showing all stores and their total sales?'),
         actions: [
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -112,25 +109,25 @@ class _PrintableBillScreenState extends State<PrintableBillScreen> {
                       MaterialPageRoute(
                           builder: (context) => SalesPdfPreviewPage(
                                 selectedSales: selectedSales,
-                                includeSummarySheet: false,
+                                includeSummarySheet: true,
                               )));
                 },
                 txt: 'No',
               ),
               PrimaryButton(
-                buttonName: 'Yes',
-                kSize: Size(70.h, 30.h),
-                onClickfunction: () {
-                  Navigator.of(context).pop();
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => SalesPdfPreviewPage(
-                                selectedSales: selectedSales,
-                                includeSummarySheet: true,
-                              )));
-                },
-              ),
+                  buttonName: 'Yes',
+                  kSize: Size(70.h, 30.h),
+                  onClickfunction: () async {
+                    Navigator.of(context).pop();
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => SalesPdfPreviewPage(
+                                    selectedSales: selectedSales,
+                                    includeSummarySheet: true,
+                                  )));
+
+                  }),
             ],
           ),
         ],
@@ -172,8 +169,7 @@ class _PrintableBillScreenState extends State<PrintableBillScreen> {
             children: [
               expandedText('${index + 1}', 1),
               expandedText(sale['storeName'] ?? '', 6),
-              expandedText(
-                  '₹${(sale['saleTotal'] ?? 0).toStringAsFixed(2)}', 4),
+              expandedText('₹${(sale['saleTotal'] ?? 0).toStringAsFixed(2)}', 4),
               Expanded(
                 flex: 3,
                 child: InkWell(
@@ -219,8 +215,7 @@ class _PrintableBillScreenState extends State<PrintableBillScreen> {
                   },
                   child: SvgPicture.asset(
                     GeneralImageAssets.icDelete,
-                    colorFilter:
-                        const ColorFilter.mode(AppColors.kRed, BlendMode.srcIn),
+                    colorFilter: const ColorFilter.mode(AppColors.kRed, BlendMode.srcIn),
                     height: 20.h,
                   ),
                 ),

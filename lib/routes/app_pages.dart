@@ -8,6 +8,8 @@ import 'package:bill_mate/screens/store/create_store.dart';
 import 'package:bill_mate/utils/common_utils.dart';
 import 'package:flutter/material.dart';
 
+import '../screens/bills/all_graph_screen.dart';
+
 part 'app_routes.dart';
 
 class AppPages {
@@ -38,6 +40,8 @@ class AppPages {
         return _createRoute(const PrintableBillScreen());
       case AppRoutes.allItems:
         return _createRoute(const AllItemsScreen());
+      case AppRoutes.allGraph:
+        return _createRoute(const AllGraphScreen());
       default:
         return _createRoute(const BillingHomeScreen());
     }

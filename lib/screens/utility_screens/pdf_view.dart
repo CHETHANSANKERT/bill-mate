@@ -1,32 +1,54 @@
+import 'dart:io';
 import 'dart:typed_data';
-
-import 'package:bill_mate/components/ui/app_colors.dart';
-import 'package:bill_mate/routes/app_pages.dart';
+import 'package:bill_mate/components/button/primary_button.dart';
 import 'package:flutter/material.dart';
-import 'package:pdf/pdf.dart';
-import 'package:printing/printing.dart';
-
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../components/ui/app_bar.dart';
+import '../../routes/app_pages.dart';
 import '../../services/local/db_service.dart';
 import 'generate_sales_pdf.dart';
+import 'package:flutter_pdfview/flutter_pdfview.dart';
+import 'package:share_plus/share_plus.dart';
 
 class SalesPdfPreviewPage extends StatefulWidget {
   final List<Map<String, dynamic>> selectedSales;
   final bool includeSummarySheet;
 
-  const SalesPdfPreviewPage(
-      {super.key,
-      required this.selectedSales,
-      required this.includeSummarySheet});
+  const SalesPdfPreviewPage({
+    super.key,
+    required this.selectedSales,
+    required this.includeSummarySheet,
+  });
 
   @override
   State<SalesPdfPreviewPage> createState() => _SalesPdfPreviewPageState();
 }
 
 class _SalesPdfPreviewPageState extends State<SalesPdfPreviewPage> {
-  Future<Uint8List> _buildPdf(PdfPageFormat format) {
-    return generateSalesPdf(widget.selectedSales,
-        includeSummary: widget.includeSummarySheet);
+  File? _pdfFile;
+
+  @override
+  void initState() {
+    super.initState();
+    _generateAndLoadPdf();
+  }
+
+  Future<void> _generateAndLoadPdf() async {
+    final Uint8List pdfBytes = await generateSalesPdf(
+      widget.selectedSales,
+      includeSummary: widget.includeSummarySheet,
+    );
+    final tempDir = await getTemporaryDirectory();
+    if (!await tempDir.exists()) {
+      await tempDir.create(recursive: true);
+    }
+    final file = File('${tempDir.path}/sales_preview.pdf');
+    await file.writeAsBytes(pdfBytes);
+
+    setState(() {
+      _pdfFile = file;
+    });
   }
 
   @override
@@ -36,46 +58,62 @@ class _SalesPdfPreviewPageState extends State<SalesPdfPreviewPage> {
         title: 'PDF Preview',
         context: context,
         isBackReq: true,
-        actionsDefined: [],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: const BoxDecoration(
-                color: AppColors.kPrimaryLightBg,
-              ),
-              child: PdfPreview(
-                build: _buildPdf,
-                useActions: true,
-                canChangePageFormat: true,
-                canChangeOrientation: true,
-                pdfFileName: 'sales_invoice.pdf',
-                allowPrinting: true,
-                allowSharing: true,
-                padding: const EdgeInsets.all(16),
-                previewPageMargin: const EdgeInsets.all(8),
-                dynamicLayout: true,
-                scrollViewDecoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                onPrinted: (context) {
-                  _markSalesAsPrinted();
-                  navigateUntil(context,AppRoutes.home);
-                },
-              ),
-            ),
-          ),
-        ],
+      body: _pdfFile == null
+          ? const Center(child: CircularProgressIndicator())
+          : PDFView(
+        filePath: _pdfFile!.path,
+        enableSwipe: true,
+        swipeHorizontal: true,
+        autoSpacing: false,
+        pageFling: true,
+        pageSnap: true,
+        defaultPage: 0,
+        fitPolicy: FitPolicy.BOTH,
+        preventLinkNavigation: false,
+        onRender: (_pages) {},
+        onError: (error) {},
+        onPageError: (page, error) {},
+        onViewCreated: (controller) {},
+        onPageChanged: (page, total) {},
       ),
+      // : const SizedBox.shrink(),
+      floatingActionButton: PrimaryButton(
+          buttonName: 'Save',
+          kSize: Size(0.4.sw, 50.h),
+          onClickfunction: () async {
+            if (_pdfFile != null) {
+              /// mark the selected sales as printed
+              await _markSalesAsPrinted();
+              /// send the pdf to whatsapp
+              await sharePdf(_pdfFile!.readAsBytesSync(), 'sale_invoice.pdf');
+            }
+            navigateUntil(context, AppRoutes.home);
+          }),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
+  /// making it as already printed
   Future<void> _markSalesAsPrinted() async {
     for (var sale in widget.selectedSales) {
       final saleId = sale['id'];
       await DatabaseHelper().markSaleAsPrinted(saleId);
     }
   }
+
+  /// share the pdf in whats app using the share plus module
+  Future<void> sharePdf(Uint8List pdfBytes, String filename) async {
+    final tempDir = await getTemporaryDirectory();
+    final file = File('${tempDir.path}/$filename');
+    await file.writeAsBytes(pdfBytes, flush: true);
+
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(file.path)],
+        text: 'Here is your PDF file',
+      ),
+    );
+  }
 }
+

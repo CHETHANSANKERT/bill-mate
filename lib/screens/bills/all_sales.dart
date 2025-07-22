@@ -114,15 +114,10 @@ class _AllSalesScreenState extends State<AllSalesScreen> {
           ? PrimaryButton(
               buttonName: 'Print',
               onClickfunction: () async {
-                final selectedSales = sales
-                    .where((sale) => selectedSaleIds.contains(sale['id']))
-                    .toList();
+                final selectedSales = sales.where((sale) => selectedSaleIds.contains(sale['id'])).toList();
 
                 if (selectedSales.isEmpty) {
-                  appSnackbar(message: 'No sales selected',context: context,snackbarState: SnackbarState.warning);
-                  // ScaffoldMessenger.of(context).showSnackBar(
-                  //     const SnackBar(content: Text("No sales selected")));
-                  return;
+                  return appSnackbar(message: 'No sales selected', context: context, snackbarState: SnackbarState.warning);
                 }
                 _onRequestSummarySheet(selectedSales);
               },
@@ -139,8 +134,7 @@ class _AllSalesScreenState extends State<AllSalesScreen> {
         backgroundColor: AppColors.kAppBg,
         surfaceTintColor: AppColors.kAppBg,
         title: const Text('Include Summary Sheet?'),
-        content: const Text(
-            'Do you want to include a table sheet at the end showing all stores and item bill list ?'),
+        content: const Text('Do you want to include a table sheet at the end showing all stores and item bill list ?'),
         actions: [
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -161,7 +155,7 @@ class _AllSalesScreenState extends State<AllSalesScreen> {
               PrimaryButton(
                 buttonName: 'Yes',
                 kSize: Size(70.h, 30.h),
-                onClickfunction: () {
+                onClickfunction: () async {
                   Navigator.of(context).pop();
                   Navigator.push(
                       context,
@@ -178,6 +172,34 @@ class _AllSalesScreenState extends State<AllSalesScreen> {
       ),
     );
   }
+
+  // /// making it as already printed
+  // Future<void> _markSalesAsPrinted() async {
+  //   for (var sale in widget.selectedSales) {
+  //     final saleId = sale['id'];
+  //     await DatabaseHelper().markSaleAsPrinted(saleId);
+  //   }
+  // }
+  //
+  // /// request permision if not granted
+  // Future<bool> requestStoragePermission() async {
+  //   final status = await Permission.storage.request();
+  //   return status.isGranted;
+  // }
+  //
+  // /// saving the pdf in file
+  // Future<File> savePdfToDownloads(Uint8List pdfBytes, String filename) async {
+  //   bool granted = await requestStoragePermission();
+  //   if (!granted) throw Exception("Storage permission not granted");
+  //
+  //   final dir = await DownloadsPathProvider.downloadsDirectory;
+  //   if (dir == null) throw Exception("Couldn't access Downloads folder");
+  //
+  //   final file = File(p.join(dir.path, '$filename.pdf'));
+  //   await file.writeAsBytes(pdfBytes, flush: true);
+  //   return file;
+  // }
+  //
 
   Widget _buildHeader() {
     return Container(
@@ -226,8 +248,7 @@ class _AllSalesScreenState extends State<AllSalesScreen> {
                     )
                   : expandedText('${index + 1}', 1),
               expandedText(sale['storeName'] ?? '', 6),
-              expandedText(
-                  '₹${(sale['saleTotal'] ?? 0).toStringAsFixed(2)}', 4),
+              expandedText('₹${(sale['saleTotal'] ?? 0).toStringAsFixed(2)}', 4),
               Expanded(
                 flex: 3,
                 child: InkWell(
@@ -273,8 +294,7 @@ class _AllSalesScreenState extends State<AllSalesScreen> {
                   },
                   child: SvgPicture.asset(
                     GeneralImageAssets.icDelete,
-                    colorFilter:
-                        const ColorFilter.mode(AppColors.kRed, BlendMode.srcIn),
+                    colorFilter: const ColorFilter.mode(AppColors.kRed, BlendMode.srcIn),
                     height: 20.h,
                   ),
                 ),

@@ -61,8 +61,6 @@ Color _snackbarColor(SnackbarState snackbarState) {
       return Colors.blueGrey.shade100;
     case SnackbarState.success:
       return AppColors.kSuccessBg;
-    default:
-      return Colors.black;
   }
 }
 
@@ -78,8 +76,6 @@ Color _snackbarTextColor(SnackbarState snackBarState) {
       return Colors.blueGrey;
     case SnackbarState.success:
       return AppColors.kSuccess;
-    default:
-      return Colors.black;
   }
 }
 
@@ -95,7 +91,5 @@ IconData _snackbarIcon(SnackbarState snackbarState) {
       return Icons.notifications_active;
     case SnackbarState.success:
       return Icons.check_circle;
-    default:
-      return Icons.notifications_active;
   }
 }

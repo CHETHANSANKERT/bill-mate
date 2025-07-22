@@ -23,9 +23,9 @@ class AddItemDialog extends StatefulWidget {
 }
 
 class _AddItemDialogState extends State<AddItemDialog> {
-  late TextEditingController _itemNameController;
-  late TextEditingController _rateController;
-  late TextEditingController _quantityController;
+  TextEditingController _itemNameController = TextEditingController();
+  TextEditingController _rateController = TextEditingController();
+  TextEditingController _quantityController = TextEditingController();
 
   double _total = 0.0;
 
@@ -40,22 +40,19 @@ class _AddItemDialogState extends State<AddItemDialog> {
   @override
   void initState() {
     super.initState();
-    _itemNameController =
-        TextEditingController(text: widget.product?.item.productName ?? '');
-    _rateController =
-        TextEditingController(text: widget.product?.rate.toString() ?? '');
-    _quantityController =
-        TextEditingController(text: widget.product?.quantity.toString() ?? '');
+    _itemNameController.text = widget.product?.item.productName ?? '';
+    _rateController.text = widget.product?.rate.toString() ?? '';
+    _quantityController.text = widget.product?.quantity.toString() ?? '';
     _rateController.addListener(_calculateTotal);
     _quantityController.addListener(_calculateTotal);
   }
 
   @override
   void dispose() {
+    super.dispose();
     _itemNameController.dispose();
     _rateController.dispose();
     _quantityController.dispose();
-    super.dispose();
   }
 
   String? _validateNotEmpty(String? value, String fieldName) {
@@ -91,25 +88,22 @@ class _AddItemDialogState extends State<AddItemDialog> {
               hintText: 'Enter Item name : ',
               suggestionsCallback: (String query) async {
                 itemsList = await DatabaseHelper().getDistinctFieldValuesInItem(query);
-                return itemsList
-                    .map((row) => row['itemName']?.toString() ?? '')
-                    .where((v) => v.isNotEmpty)
-                    .toSet()
-                    .toList();
+                return itemsList.map((row) => row['itemName']?.toString() ?? '').where((v) => v.isNotEmpty).toSet().toList();
               },
               validator: (value) => _validateNotEmpty(value, 'itemName'),
-              onTap: (){
-                _rateController.text = itemsList.where((item) {
-                  return item['itemName'] == _itemNameController.text;
-                }).first['rate'].toString();
+              onTap: () {
+                _rateController.text = itemsList
+                    .where((item) {
+                      return item['itemName'] == _itemNameController.text;
+                    })
+                    .first['rate']
+                    .toString();
               },
             ),
             16.verticalSpace,
-            _buildInput('Rate', _rateController,
-                keyboardType: TextInputType.number),
+            _buildInput('Rate', _rateController, keyboardType: TextInputType.number),
             16.verticalSpace,
-            _buildInput('Quantity', _quantityController,
-                keyboardType: TextInputType.number),
+            _buildInput('Quantity', _quantityController, keyboardType: TextInputType.number),
             16.verticalSpace,
             Align(
               alignment: Alignment.centerLeft,
@@ -124,7 +118,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
               children: [
                 TxtBtn(
                   txt: 'Cancel',
-                  onPress: (){
+                  onPress: () {
                     Navigator.pop(context);
                   },
                 ),
@@ -132,46 +126,41 @@ class _AddItemDialogState extends State<AddItemDialog> {
                   buttonName: isEditing ? 'Update' : 'Save',
                   kSize: Size(0.25.sw, 56.h),
                   onClickfunction: () async {
-                    Navigator.pop(context);
-                    final productName = _itemNameController.text.trim();
-                    final rate = double.tryParse(_rateController.text) ?? 0;
-                    final quantity =
-                        double.tryParse(_quantityController.text) ?? 0;
-                    final total = rate * quantity;
-                    if (productName.isEmpty || rate <= 0 || quantity <= 0) {
-                      return;
-                    }
-                    final product = Product(
-                      item: Item(
-                        id: widget.product?.item.id,
-                        productName: productName,
+                    try {
+                      final productName = _itemNameController.text.trim();
+                      final rate = double.tryParse(_rateController.text) ?? 0;
+                      final quantity = double.tryParse(_quantityController.text) ?? 0;
+                      final total = rate * quantity;
+                      if (productName.isEmpty || rate <= 0 || quantity <= 0) {
+                        return;
+                      }
+                      final product = Product(
+                        item: Item(
+                          id: widget.product?.item.id,
+                          productName: productName,
+                          rate: rate,
+                        ),
+                        quantity: quantity,
+                        total: total,
                         rate: rate,
-                      ),
-                      quantity: quantity,
-                      total: total,
-                      rate: rate,
-                    );
-                    if (await DatabaseHelper()
-                        .findItemIsPresent(_itemNameController.text)) {
-                      Map<String, dynamic> item = {
-                        'id': const Uuid().v4(),
-                        'itemName': productName,
-                        'rate': rate,
-                      };
-                      DatabaseHelper().insertItem(item);
+                      );
+                      if (await DatabaseHelper().findItemIsPresent(_itemNameController.text)) {
+                        Map<String, dynamic> item = {
+                          'id': const Uuid().v4(),
+                          'itemName': productName,
+                          'rate': rate,
+                        };
+                        DatabaseHelper().insertItem(item);
+                      }
+                      if (isEditing) {
+                        context.read<CreateBillBloc>().add(ProductUpdated(product));
+                      } else {
+                        context.read<CreateBillBloc>().add(ProductAdded(product));
+                      }
+                    } finally {
+                      Navigator.pop(context);
                     }
-
-                    if (isEditing) {
-                      context
-                          .read<CreateBillBloc>()
-                          .add(ProductUpdated(product));
-                    }
-                    else {
-                      context.read<CreateBillBloc>().add(ProductAdded(product));
-                    }
-
-                    // Navigator.pop(context);
-                    },
+                  },
                 ),
               ],
             )
@@ -181,8 +170,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
     );
   }
 
-  Widget _buildInput(String label, TextEditingController controller,
-      {TextInputType? keyboardType}) {
+  Widget _buildInput(String label, TextEditingController controller, {TextInputType? keyboardType}) {
     return TextInputField(
       name: 'label',
       controller: controller,

@@ -95,17 +95,14 @@ class _AddProductsState extends State<AddProducts> {
                       label: 'Store Name : ',
                       value: widget.storeName,
                     ),
-                    8.verticalSpace,
                     _labelValueText(
-                      label: 'Owner Name : ',
-                      value: widget.ownerName,
-                    ),
-                    8.verticalSpace,
+                            label: 'Owner Name : ',
+                            value: widget.ownerName,
+                          ),
                     _labelValueText(
                       label: 'Address : ',
                       value: widget.address,
                     ),
-                    8.verticalSpace,
                     _rowLabel(
                       label1: 'Beat Name : ',
                       value1: widget.beat,
@@ -145,8 +142,7 @@ class _AddProductsState extends State<AddProducts> {
                   if (state is CreateBillLoaded) {
                     final products = state.products;
                     if (products.isEmpty) {
-                      return const Center(
-                          child: Text('No products added yet.'));
+                      return const Center(child: Text('No products added yet.'));
                     }
                     return ListView.builder(
                       itemCount: products.length,
@@ -162,8 +158,7 @@ class _AddProductsState extends State<AddProducts> {
                                 Container(
                                   decoration: BoxDecoration(
                                       color: AppColors.kCardBg.withOpacity(0.3),
-                                      borderRadius: BorderRadius.vertical(
-                                          top: Radius.circular(16.r))),
+                                      borderRadius: BorderRadius.vertical(top: Radius.circular(16.r))),
                                   padding: EdgeInsets.all(12.h),
                                   child: Row(
                                     children: [
@@ -177,16 +172,13 @@ class _AddProductsState extends State<AddProducts> {
                                           showDialog(
                                             context: context,
                                             barrierDismissible: true,
-                                            barrierColor: AppColors.kBlack
-                                                .withOpacity(0.3),
-                                            builder: (context) =>
-                                                AddItemDialog(product: product),
+                                            barrierColor: AppColors.kBlack.withOpacity(0.3),
+                                            builder: (context) => AddItemDialog(product: product),
                                           );
                                         },
                                         child: SvgPicture.asset(
                                           GeneralImageAssets.icEdit,
-                                          colorFilter: const ColorFilter.mode(
-                                              AppColors.kBlue, BlendMode.srcIn),
+                                          colorFilter: const ColorFilter.mode(AppColors.kBlue, BlendMode.srcIn),
                                           height: 20.h,
                                         ),
                                       ),
@@ -198,17 +190,14 @@ class _AddProductsState extends State<AddProducts> {
                                             barrierDismissible: false,
                                             builder: (context) => AlertDialog(
                                               backgroundColor: AppColors.kAppBg,
-                                              surfaceTintColor:
-                                                  AppColors.kAppBg,
+                                              surfaceTintColor: AppColors.kAppBg,
                                               title: const Text(
                                                 'Confirm Delete',
-                                                style:
-                                                    AppTextStyles.kw600Black16,
+                                                style: AppTextStyles.kw600Black16,
                                               ),
                                               content: const Text(
                                                 'Are you sure you want to delete this product?',
-                                                style:
-                                                    AppTextStyles.kw400Black14,
+                                                style: AppTextStyles.kw400Black14,
                                               ),
                                               actions: [
                                                 TextButton(
@@ -217,22 +206,17 @@ class _AddProductsState extends State<AddProducts> {
                                                   },
                                                   child: const Text(
                                                     'Cancel',
-                                                    style: AppTextStyles
-                                                        .kw600Black16,
+                                                    style: AppTextStyles.kw600Black16,
                                                   ),
                                                 ),
                                                 TextButton(
                                                   onPressed: () {
-                                                    context
-                                                        .read<CreateBillBloc>()
-                                                        .add(ProductDeleted(
-                                                            product.item.id));
+                                                    context.read<CreateBillBloc>().add(ProductDeleted(product.item.id));
                                                     Navigator.pop(context);
                                                   },
                                                   child: const Text(
                                                     'Delete',
-                                                    style: AppTextStyles
-                                                        .kErrorText16,
+                                                    style: AppTextStyles.kErrorText16,
                                                   ),
                                                 ),
                                               ],
@@ -241,9 +225,7 @@ class _AddProductsState extends State<AddProducts> {
                                         },
                                         child: SvgPicture.asset(
                                           GeneralImageAssets.icDelete,
-                                          colorFilter: const ColorFilter.mode(
-                                              AppColors.kPrimary,
-                                              BlendMode.srcIn),
+                                          colorFilter: const ColorFilter.mode(AppColors.kPrimary, BlendMode.srcIn),
                                           height: 20.h,
                                         ),
                                       ),
@@ -293,8 +275,7 @@ class _AddProductsState extends State<AddProducts> {
           final state = context.read<CreateBillBloc>().state;
           if (state is CreateBillLoaded) {
             double saleTotal = state.total;
-            final String invoiceId =
-                DateTime.now().millisecondsSinceEpoch.toString();
+            final String invoiceId = DateTime.now().millisecondsSinceEpoch.toString();
 
             final sale = Sale(
               invoiceId: invoiceId,
@@ -339,20 +320,24 @@ class _AddProductsState extends State<AddProducts> {
   }
 
   /// key value pair text
-  RichText _labelValueText({String? label, String? value}) {
-    return RichText(
-      text: TextSpan(
-        children: [
-          TextSpan(text: label, style: AppTextStyles.kw400Black14),
-          TextSpan(text: value, style: AppTextStyles.kw600Black16),
-        ],
-      ),
-    );
+  _labelValueText({String? label, String? value}) {
+    return (value != null && value.isNotEmpty)
+        ? Padding(
+          padding: EdgeInsets.symmetric(vertical: 4.h),
+          child: RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(text: label, style: AppTextStyles.kw400Black14),
+                  TextSpan(text: value, style: AppTextStyles.kw600Black16),
+                ],
+              ),
+            ),
+        )
+        : const SizedBox.shrink();
   }
 
   /// row in 2 [labelValueText] pair
-  Row _rowLabel(
-      {String? label1, String? value1, String? label2, String? value2}) {
+  Row _rowLabel({String? label1, String? value1, String? label2, String? value2}) {
     return Row(
       children: [
         _labelValueText(

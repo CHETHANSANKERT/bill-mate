@@ -12,13 +12,41 @@ import 'package:permission_handler/permission_handler.dart';
 import 'bloc/login/login_bloc.dart';
 import 'constants/design_size.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Request storage permission
+  onLoadApp();
+
+  runApp(const MyApp());
+}
+
+// void _scheduleDailyBackup() {
+//   Workmanager().registerPeriodicTask(
+//     "dbBackupTask",
+//     "backupTask",
+//     frequency: const Duration(hours: 24),
+//     existingWorkPolicy: ExistingWorkPolicy.keep,
+//   );
+// }
+
+// void _callbackDispatcher() {
+//   Workmanager().executeTask((taskName, inputData) async {
+//     final account = await GoogleSignIn().signInSilently();
+//     if (account != null) {
+//       _scheduleDailyBackup();
+//       await uploadToGoogleDrive(account);
+//     }
+//     return Future.value(true);
+//   });
+// }
+
+Future<void> onLoadApp() async {
+
+  /// Request storage permission
   await _requestStoragePermission();
 
-  onInitalLoadOfApp();
+  /// for adding an auto backup feature
+  // await Workmanager().initialize(_callbackDispatcher);
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -26,13 +54,6 @@ void main() async {
       statusBarIconBrightness: Brightness.dark,
     ),
   );
-  runApp(const MyApp());
-}
-
-
-
-void onInitalLoadOfApp() {
-
 }
 
 Future<void> _requestStoragePermission() async {

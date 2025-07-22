@@ -3,6 +3,7 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../model/general/key_value.dart';
+import '../../model/store/store.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -31,7 +32,13 @@ class DatabaseHelper {
   }
 
   Future _onCreate(Database db, int version) async {
-    /// 1. Stores Table (main store entity)
+    await _createStoresTable(db);
+    await _createItemsTable(db);
+    await _createSalesTable(db);
+    await _createSaleProductsTable(db);
+  }
+
+  Future<void> _createStoresTable(Database db) async {
     await db.execute('''
     CREATE TABLE stores (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,8 +54,9 @@ class DatabaseHelper {
       mobileNum TEXT
     )
   ''');
+  }
 
-    /// 2. Items Table (items that belong to a store)
+  Future<void> _createItemsTable(Database db) async {
     await db.execute('''
     CREATE TABLE item (
       id TEXT PRIMARY KEY,
@@ -56,22 +64,26 @@ class DatabaseHelper {
       rate REAL
     )
   ''');
+  }
 
-    /// 3. Sales Table (each sale belongs to a store)
+  Future<void> _createSalesTable(Database db) async {
     await db.execute('''
-    CREATE TABLE sales (
-      id TEXT PRIMARY KEY,
-      storeName TEXT,
-      storeId TEXT,
-      saleTotal REAL,
-      invoiceId INTEGER,
-      createdAt TEXT,
-      isPrinted INTEGER DEFAULT 0,
-      FOREIGN KEY (storeId) REFERENCES stores (id) ON DELETE CASCADE
-    )
-  ''');
+  CREATE TABLE sales (
+    billingId INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT UNIQUE,
+    storeName TEXT,
+    storeId TEXT,
+    saleTotal REAL,
+    invoiceId INTEGER,
+    createdAt TEXT,
+    isPrinted INTEGER DEFAULT 0,
+    FOREIGN KEY (storeId) REFERENCES stores (id) ON DELETE CASCADE
+  )
+''');
+  }
 
-    /// 4. Sale Products Table (each sale-product links to sale and item)
+
+  Future<void> _createSaleProductsTable(Database db) async {
     await db.execute('''
     CREATE TABLE sale_products (
       saleId TEXT,
@@ -87,21 +99,32 @@ class DatabaseHelper {
   }
 
   /// Store CRUD
-  Future<int> insertStore(Map<String, dynamic> store) async {
+  Future<void> insertStore(StoreModel store) async {
     final db = await database;
-    return await db.insert('stores', store);
+    if ((await db.query(
+      'stores',
+      where: 'storeName = ? AND area = ? AND beat = ? AND address = ? AND mobileNum = ?',
+      whereArgs: [store.storeName, store.area, store.beat, store.address, store.mobileNum],
+    ))
+        .isEmpty) {
+      await db.insert('stores', store.toJson());
+    }
   }
 
+  /// fins all stores to be displayed in all stores
   Future<List<Map<String, dynamic>>> getAllStores() async {
     final db = await database;
     return await db.query('stores');
   }
 
-  Future<Map<String, dynamic>> getStoresById(String id) async {
+  Future<Map<String, dynamic>?>? getStoresById(String id) async {
     final db = await database;
-    final result =
-        await db.query('stores', where: 'storeId = ?', whereArgs: [id]);
-    return result.first;
+    final result = await db.query('stores', where: 'storeId = ?', whereArgs: [id]);
+    if (result.isNotEmpty) {
+      return result.first;
+    } else {
+      return null;
+    }
   }
 
   Future<int> deleteStore(String id) async {
@@ -109,8 +132,8 @@ class DatabaseHelper {
     return await db.delete('stores', where: 'id = ?', whereArgs: [id]);
   }
 
-  Future<Map<String, Object?>> findStore(
-      String name, String area, String beat) async {
+  /// find all stores for the drop down values
+  Future<Map<String, Object?>> findStore(String name, String area, String beat) async {
     final db = await database;
     final result = await db.rawQuery(
       '''
@@ -123,7 +146,14 @@ class DatabaseHelper {
     return result.first;
   }
 
-  /// Product CRUD
+  /// find if the stores are present in the database with the values and if not add to the db
+  Future<int> addStore(Map<String, dynamic> store) async {
+    final db = await database;
+    return await db.insert('stores', store);
+  }
+
+  /// Product CRUD operations
+  /// insert a new product to the database
   Future<int> insertProduct(Map<String, dynamic> product) async {
     final db = await database;
     return await db.insert('sale_products', product);
@@ -163,11 +193,9 @@ class DatabaseHelper {
   }
 
   /// Get products for a given sale
-  Future<List<Map<String, dynamic>>> getSaleProductsBySaleId(
-      String saleId) async {
+  Future<List<Map<String, dynamic>>> getSaleProductsBySaleId(String saleId) async {
     final db = await database;
-    return await db
-        .query('sale_products', where: 'saleId = ?', whereArgs: [saleId]);
+    return await db.query('sale_products', where: 'saleId = ?', whereArgs: [saleId]);
   }
 
   /// get the option of store value available in stores
@@ -190,11 +218,7 @@ class DatabaseHelper {
 
     final result = await db.rawQuery(sql, args);
 
-    return result
-        .map((row) => row[field]?.toString() ?? '')
-        .where((v) => v.isNotEmpty)
-        .toSet()
-        .toList();
+    return result.map((row) => row[field]?.toString() ?? '').where((v) => v.isNotEmpty).toSet().toList();
   }
 
   /// mark the sale as already printed
@@ -259,5 +283,4 @@ class DatabaseHelper {
     );
     return result;
   }
-
 }

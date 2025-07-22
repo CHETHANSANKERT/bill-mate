@@ -15,6 +15,7 @@ class GeneralImageAssets {
   static const String icCall = '${_path}ic_call.jpg';
   static const String icLocation = '${_path}ic_location.png';
   static const String icMail = '${_path}ic_mail.jpeg';
+  static const String icAddToDrive = '${_path}ic_add_to_drive.svg';
 }
 
 class LoginImageAssets {
