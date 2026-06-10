@@ -41,17 +41,6 @@ class DatabaseHelper {
       await db.execute("ALTER TABLE sales ADD COLUMN beat TEXT;");
       await db.execute("ALTER TABLE sales ADD COLUMN mobileNum TEXT;");
     }
-    if (oldVersion < 3) {
-      // Adding stockQuantity for items in version 3
-      await db.execute("ALTER TABLE item ADD COLUMN stockQuantity REAL DEFAULT 0;");
-    }
-    if (oldVersion < 4) {
-      // Create customers table if not exists
-      final tables = await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='customers'");
-      if (tables.isEmpty) {
-        await _createCustomersTable(db);
-      }
-    }
   }
 
   Future _onCreate(Database db, int version) async {
@@ -319,7 +308,6 @@ class DatabaseHelper {
     final db = await database;
     await db.insert('item', {
       ...item,
-      if (!item.containsKey('stockQuantity')) 'stockQuantity': 0.0,
     });
   }
 
@@ -331,7 +319,6 @@ class DatabaseHelper {
   Future<int> updateItem({
     required String id,
     required double rate,
-    required double stockQuantity,
   }) async {
     final db = await database;
 
@@ -339,32 +326,12 @@ class DatabaseHelper {
       'item',
       {
         'rate': rate,
-        'stockQuantity': stockQuantity,
       },
       where: 'id = ?',
       whereArgs: [id],
     );
   }
 
-  Future<void> updateItemStock(String itemId, double stockQuantity) async {
-    final db = await database;
-    await db.update(
-      'item',
-      {'stockQuantity': stockQuantity},
-      where: 'id = ?',
-      whereArgs: [itemId],
-    );
-  }
-
-  /// deduct sold quantity from item stock
-  Future<void> deductItemStock(String itemId, double soldQuantity) async {
-    final db = await database;
-    await db.rawQuery('''
-      UPDATE item 
-      SET stockQuantity = stockQuantity - ?
-      WHERE id = ?
-    ''', [soldQuantity, itemId]);
-  }
 
   /// delete functionality in teh item
   Future<int> deleteItem(String id) async {
@@ -373,7 +340,7 @@ class DatabaseHelper {
   }
 
   /// find item  in the table
-  Future<bool> findItemIsPresent(String itemName) async {
+  Future<bool> isNewItem(String itemName) async {
     final db = await database;
     final result = await db.rawQuery(
       '''SELECT * FROM item WHERE itemName = ?''',

@@ -96,25 +96,6 @@ class _AddProductsState extends State<AddProducts> {
       return;
     }
 
-    /// Check stock
-    /// Not required as of now
-    // final allItems = await DatabaseHelper().getAllItems();
-    // final itemMatch = allItems.firstWhere(
-    //   (i) => i['itemName'] == productName,
-    //   orElse: () => {'stockQuantity': 0.0},
-    // );
-    // final availableStock = itemMatch['stockQuantity'] ?? 0.0;
-    // if (quantity > availableStock) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(
-    //       content: Text(
-    //           'Insufficient stock! Available: ${availableStock.toStringAsFixed(0)}'),
-    //       backgroundColor: AppColors.kError,
-    //     ),
-    //   );
-    //   return;
-    // }
-
     final total = rate * quantity;
     final product = Product(
       item: Item(productName: productName, rate: rate),
@@ -122,16 +103,13 @@ class _AddProductsState extends State<AddProducts> {
       total: total,
       rate: rate,
     );
-    if (await DatabaseHelper().findItemIsPresent(productName)) {
+    if (await DatabaseHelper().isNewItem(productName)) {
       await DatabaseHelper().insertItem({
         'id': const Uuid().v4(),
         'itemName': productName,
         'rate': rate,
-        'stockQuantity': 0.0,
       });
     }
-    // Deduct stock
-    // await DatabaseHelper().deductItemStock(itemMatch['id'], quantity);
     blocContext.read<CreateBillBloc>().add(ProductAdded(product));
     _itemNameController.clear();
     _rateController.clear();

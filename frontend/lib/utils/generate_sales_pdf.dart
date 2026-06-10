@@ -29,7 +29,7 @@ Future<Uint8List> generateSalesPdf(
     final List<Map<String, dynamic>> saleProducts =
         await DatabaseHelper().getSaleProductsBySaleId(saleId);
 
-    final Map<String, dynamic> store =
+    final Map<String, dynamic>? store =
         await DatabaseHelper().getStoresById(storeId);
     imageText(ByteData byteData, String txt, {Size? ksize}) {
       return pw.Row(children: [
@@ -92,12 +92,12 @@ Future<Uint8List> generateSalesPdf(
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      textKeyValue('Store name', store['storeName']),
-                      textKeyValue('Owner name', store['ownerName']),
-                      textKeyValue('Area', store['area']),
-                      textKeyValue('Beat', store['beat']),
-                      textKeyValue('address', store['address']),
-                      textKeyValue('Mobile Number', store['mobileNum']),
+                      textKeyValue('Store name', store?['storeName']),
+                      textKeyValue('Owner name', store?['ownerName']),
+                      textKeyValue('Area', store?['area']),
+                      textKeyValue('Beat', store?['beat']),
+                      textKeyValue('address', store?['address']),
+                      textKeyValue('Mobile Number', store?['mobileNum']),
                     ],
                   ),
                   pw.Column(

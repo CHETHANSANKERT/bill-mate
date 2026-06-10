@@ -15,11 +15,9 @@ import '../../utils/empty_screen.dart';
 
 class ItemEditResult {
   final double rate;
-  final double stockQuantity;
 
   const ItemEditResult({
     required this.rate,
-    required this.stockQuantity,
   });
 }
 
@@ -39,10 +37,6 @@ class _AllItemsScreenState extends State<AllItemsScreen> {
 
     final rateController = TextEditingController(
       text: item['rate'].toString(),
-    );
-
-    final stockController = TextEditingController(
-      text: item['stockQuantity'].toString(),
     );
 
     return showDialog<ItemEditResult>(
@@ -108,24 +102,6 @@ class _AllItemsScreenState extends State<AllItemsScreen> {
 
                   const SizedBox(height: 16),
 
-                  /// Stock
-                  TextFormField(
-                    controller: stockController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    validator: validateNumber,
-                    decoration: InputDecoration(
-                      labelText: "Stock Quantity",
-                      prefixIcon: const Icon(Icons.inventory),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
                   Row(
                     children: [
                       Expanded(
@@ -149,9 +125,6 @@ class _AllItemsScreenState extends State<AllItemsScreen> {
                               ItemEditResult(
                                 rate: double.parse(
                                   rateController.text,
-                                ),
-                                stockQuantity: double.parse(
-                                  stockController.text,
                                 ),
                               ),
                             );
@@ -198,7 +171,6 @@ class _AllItemsScreenState extends State<AllItemsScreen> {
     await DatabaseHelper().updateItem(
       id: item['id'],
       rate: result.rate,
-      stockQuantity: result.stockQuantity,
     );
 
     appSnackbar(message: 'Please enter all the values', snackbarState: SnackbarState.warning);
@@ -314,7 +286,6 @@ class _AllItemsScreenState extends State<AllItemsScreen> {
           expandedText('Sl.', 1),
           expandedText('Sale', 6),
           expandedText('Rate', 3),
-          expandedText('Stock', 3),
           expandedText('Action', 3),
         ],
       ),
@@ -342,19 +313,6 @@ class _AllItemsScreenState extends State<AllItemsScreen> {
               expandedText('${index + 1}', 1, isStart: true),
               expandedText(item['itemName'] ?? '', 6, isStart: true),
               expandedText('₹${(item['rate'] ?? 0).toStringAsFixed(2)}', 3, isStart: true),
-              Expanded(
-                flex: 3,
-                child: Text(
-                  '${(item['stockQuantity'] ?? 0.0).toStringAsFixed(0)}',
-                  style: TextStyle(
-                    color: (item['stockQuantity'] ?? 0.0) < 10
-                        ? Colors.red
-                        : Theme.of(context).textTheme.bodyMedium!.color!,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14.sp,
-                  ),
-                ),
-              ),
               Expanded(
                 flex: 3,
                 child: Row(
